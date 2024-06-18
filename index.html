@@ -4,18 +4,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>尘白禁区信源研析</title>
+  <title>Snowbreak:Containment Zone Infosource analysis</title>
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.global.prod.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-i18n/dist/vue-i18n.global.prod.min.js"></script>
   <script src="./calc.min.js"></script>
 </head>
 
 <body>
   <a href="https://space.bilibili.com/277401945" target="_blank">Bilibili 方形的块状代码</a>
   <div id="app">
-    <p>行数：<input type="text" v-model="row" /></p>
-    <p>列数：<input type="text" v-model="col" /></p>
-    <input type="button" value="确定" @click="confirmBoard">
-    <p>红色表示需要摆放的格子，白色表示这里没有格子，点击切换</p>
+    <p>{{ $t('m.row') }}<input type="text" v-model="row" /></p>
+    <p>{{ $t('m.col') }}<input type="text" v-model="col" /></p>
+    <input type="button" :value="$t('m.ok')" @click="confirmBoard">
+    <p v-if="board.length">{{ $t('m.help') }}</p>
     <div v-for="(r, i) in board" style="height: 32px;">
       <div
         class="box"
@@ -25,14 +26,14 @@
       ></div>
     </div>
     <div v-if="board.length" style="margin-top: 8px;">
-      <p v-for="(b, i) in num">方块{{ i + 1 }}个数：<input type="text" v-model.number="num[i]" /></p>
-      <input type="button" value="计算完美方案" @click="calc">
+      <p v-for="(b, i) in num">{{ $t('m.fragment') + String(i + 1).padStart(2, ' ') + $t('m.count') }}<input type="text" v-model.number="num[i]" /></p>
+      <input type="button" :value="$t('m.calculate')" @click="calc">
     </div>
     <div v-if="res !== false">
-      <p>方案数：{{ res.length }}</p>
+      <p>{{ $t('m.solution') + res.length }}</p>
     </div>
     <div v-if="res.length">
-      <p>当前展示方案：{{ now + 1 }} / {{ res.length }}</p>
+      <p>{{ $t('m.current') }}{{ now + 1 }} / {{ res.length }}</p>
       <input type="button" value="<-" @click="now -= (now > 0)">
       <input type="button" value="->" @click="now += (now + 1 < res.length)">
       <div v-for="(r, i) in sol" style="height: 32px;">
@@ -46,6 +47,24 @@
   </div>
   <script>
     const { createApp } = Vue
+    const { createI18n, useI18n } = VueI18n
+    const navlang = navigator.language
+
+    let applang = 'en'
+    if (navlang.search(/zh/i) !== -1) applang = 'zh_Hans'
+    if (navlang.search(/Hant/i) !== -1 || navlang.search(/tw/i) !== -1 || navlang.search(/hk/i) !== -1) applang = 'zh_Hant'
+    //if (navlang.search(/ja/i) !== -1) applang = 'ja'
+    //if (navlang.search(/ko/i) !== -1) applang = 'ko'
+    switch (applang) {
+      case 'zh_Hans':
+        document.title = '尘白禁区信源研析'
+        break
+      case 'zh_Hant':
+        document.title = '塵白禁域訊源研析'
+        break
+      default:
+    }
+
     createApp({
       data() {
         return {
@@ -153,7 +172,53 @@
           return this.res[this.now]
         }
       }
-    }).mount('#app')
+    }).use(
+      createI18n({
+        locale: applang,
+        fallbackLocale: 'en',
+        messages: {
+          en: {
+            m: {
+              row: 'Row: ',
+              col: 'Column: ',
+              ok: 'Ok',
+              help: 'Red means the position can be filled in, white means the position cannot be filled in, click to switch.',
+              fragment: 'Vital fragment',
+              count: ' amount: ',
+              calculate: 'Calculate best solution',
+              solution: 'Number of solutions: ',
+              current: 'Current display solution: '
+            }
+          },
+          zh_Hans: {
+            m: {
+              row: '行数：',
+              col: '列数：',
+              ok: '确定',
+              help: '红色表示需要摆放的格子，白色表示这里没有格子，点击切换。',
+              fragment: '关键断片',
+              count: ' 个数：',
+              calculate: '计算完美方案',
+              solution: '方案数：',
+              current: '当前展示方案：'
+            }
+          },
+          zh_Hant: {
+            m: {
+              row: '列數：',
+              col: '行數：',
+              ok: '確定',
+              help: '紅色表示該格可以擺放，白色表示該格不可擺放，點擊切換。',
+              fragment: '關鍵斷片',
+              count: ' 個數：',
+              calculate: '計算完美方案',
+              solution: '方案數：',
+              current: '當前展示方案：'
+            }
+          },
+        },
+      })
+    ).mount('#app')
   </script>
   <style>
     p {
